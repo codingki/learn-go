@@ -1,25 +1,46 @@
 package main
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"os"
+)
 
 func main() {
-	var revenue, expenses, taxRate float64
+	revenue, err1 := getUserInput("Enter total revenue: ")
+	expenses, err2 := getUserInput("Enter total expenses: ")
+	taxRate, err3 := getUserInput("Enter tax rate (in %): ")
+	if err1 != nil || err2 != nil || err3 != nil {
+		fmt.Println("Error:", "All inputs must be greater than zero.")
+		return
+	}
+	earningBeforeTax, ratio, earningAfterTax := calculateEarnigs(revenue, expenses, taxRate)
 
-	fmt.Print("Enter total revenue: ")
-	fmt.Scan(&revenue)
+	ebt := fmt.Sprintf("Earnings Before Tax: %.1f\n", earningBeforeTax)
+	rat := fmt.Sprintf("Ratio of Earnings Before Tax to Earnings After Tax: %.1f\n", ratio)
+	pro := fmt.Sprintf("Earnings After Tax (Profit): %.1f\n", earningAfterTax)
 
-	fmt.Print("Enter expenses: ")
-	fmt.Scan(&expenses)
+	fmt.Print(ebt, rat, pro)
 
-	fmt.Print("Enter tax rate (%): ")
-	fmt.Scan(&taxRate)
+	content := fmt.Sprintf("%s%s%s", ebt, rat, pro)
 
-	earningBeforeTax := revenue - expenses
-	earningAfterTax := earningBeforeTax * (1 - taxRate/100)
+	os.WriteFile("profit.txt", []byte(content), 0644)
+}
 
-	ratio := earningBeforeTax / earningAfterTax
+func getUserInput(text string) (input float64, err error) {
+	fmt.Print(text)
+	fmt.Scan(&input)
+	if input <= 0 {
+		input = 0
+		return input, errors.New("input must be greater than zero")
+	}
 
-	fmt.Println("Earnings Before Tax: ", earningBeforeTax)
-	fmt.Println("Ratio of Earnings Before Tax to Earnings After Tax: ", ratio)
-	fmt.Println("Earnings After Tax (Profit): ", earningAfterTax)
+	return input, nil
+}
+
+func calculateEarnigs(revenue, expenses, taxRate float64) (earningBeforeTax, ratio, earningAfterTax float64) {
+	earningBeforeTax = revenue - expenses
+	earningAfterTax = earningBeforeTax * (1 - taxRate/100)
+	ratio = earningBeforeTax / earningAfterTax
+	return earningBeforeTax, ratio, earningAfterTax
 }
